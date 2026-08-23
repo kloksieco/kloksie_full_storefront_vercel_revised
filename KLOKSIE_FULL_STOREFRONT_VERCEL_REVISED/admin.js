@@ -1,56 +1,28 @@
 let token = sessionStorage.getItem("kloksieAdminToken") || "";
 let products = [];
-const loginPanel = document.getElementById("loginPanel");
-const dashboard = document.getElementById("dashboard");
-const loginMessage = document.getElementById("loginMessage");
-const dashboardMessage = document.getElementById("dashboardMessage");
-const form = document.getElementById("productForm");
-const productList = document.getElementById("productList");
-
-function escapeHtml(value = "") { return String(value).replace(/[&<>'"]/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", '"':"&quot;" })[char]); }
-function showMessage(element, message, success = false) { element.textContent = message || ""; element.classList.toggle("success", Boolean(success)); }
-function image(value) { return /^(https?:\/\/|\/|assets\/)/i.test(String(value || "")) ? value : "assets/product-01.jpg"; }
-function headers() { return { "Content-Type": "application/json", Authorization: `Bearer ${token}` }; }
-
-async function request(url, options = {}) {
-  const response = await fetch(url, options); const data = await response.json().catch(() => ({}));
-  if (response.status === 401) signOut();
-  if (!response.ok) throw new Error(data.error || "Something went wrong.");
-  return data;
-}
-
-function productValues(product) {
-  for (const [key, value] of Object.entries(product)) { const field = form.elements.namedItem(key); if (!field) continue; if (field.type === "checkbox") field.checked = Boolean(value); else field.value = value ?? ""; }
-}
-function newProduct() { form.reset(); form.elements.active.checked = true; form.elements.sort_order.value = "0"; form.elements.id.value = ""; document.getElementById("formTitle").textContent = "Add a product"; document.getElementById("resetForm").hidden = true; showMessage(dashboardMessage, ""); }
-function editProduct(id) { const product = products.find(item => item.id === id); if (!product) return; productValues(product); document.getElementById("formTitle").textContent = "Edit product"; document.getElementById("resetForm").hidden = false; window.scrollTo({ top: 0, behavior: "smooth" }); }
-
-function renderProducts() {
-  document.getElementById("inventoryCount").textContent = `${products.length} ${products.length === 1 ? "ITEM" : "ITEMS"}`;
-  if (!products.length) { productList.innerHTML = '<p class="empty">No products yet. Add your first piece here.</p>'; return; }
-  productList.innerHTML = products.map(product => `<article class="inventory-row"><img src="${escapeHtml(image(product.image))}" alt=""><div><h3>${escapeHtml(product.name)}</h3><p>₱${Number(product.price || 0).toLocaleString("en-PH")} · ${Number(product.stock || 0)} in stock</p><p class="meta">${escapeHtml(product.category || "Archive")}${product.size ? ` · SIZE ${escapeHtml(product.size)}` : ""}${product.active ? "" : " · HIDDEN"}</p></div><div class="row-actions"><button data-edit="${escapeHtml(product.id)}">EDIT</button><button data-hide="${escapeHtml(product.id)}">${product.active ? "HIDE" : "SHOW"}</button></div></article>`).join("");
-}
-
-async function loadProducts() { const data = await request("/api/admin/products", { headers: headers() }); products = data.products || []; renderProducts(); }
-async function openDashboard() { loginPanel.hidden = true; dashboard.hidden = false; try { await loadProducts(); } catch (error) { showMessage(dashboardMessage, error.message); } }
-function signOut() { token = ""; sessionStorage.removeItem("kloksieAdminToken"); dashboard.hidden = true; loginPanel.hidden = false; newProduct(); }
-
-document.getElementById("loginForm").addEventListener("submit", async event => {
-  event.preventDefault(); const button = event.currentTarget.querySelector("button"); button.disabled = true; showMessage(loginMessage, "");
-  try { const password = new FormData(event.currentTarget).get("password"); const data = await request("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }); token = data.token; sessionStorage.setItem("kloksieAdminToken", token); event.currentTarget.reset(); await openDashboard(); }
-  catch (error) { showMessage(loginMessage, error.message); } finally { button.disabled = false; }
-});
-form.addEventListener("submit", async event => {
-  event.preventDefault(); const data = Object.fromEntries(new FormData(form)); data.active = form.elements.active.checked; data.price = Number(data.price); data.stock = Number(data.stock); data.sort_order = Number(data.sort_order); const editing = Boolean(data.id); const button = form.querySelector(".save-product"); button.disabled = true; showMessage(dashboardMessage, "");
-  try { await request("/api/admin/products", { method: editing ? "PUT" : "POST", headers: headers(), body: JSON.stringify(data) }); newProduct(); showMessage(dashboardMessage, editing ? "Product updated." : "Product added.", true); await loadProducts(); }
-  catch (error) { showMessage(dashboardMessage, error.message); } finally { button.disabled = false; }
-});
-productList.addEventListener("click", async event => {
-  const edit = event.target.closest("[data-edit]"); if (edit) return editProduct(edit.dataset.edit);
-  const hide = event.target.closest("[data-hide]"); if (!hide) return; const product = products.find(item => item.id === hide.dataset.hide); if (!product) return; showMessage(dashboardMessage, "");
-  try { await request("/api/admin/products", { method: "PUT", headers: headers(), body: JSON.stringify({ ...product, active: !product.active }) }); showMessage(dashboardMessage, product.active ? "Product hidden from the store." : "Product is visible in the store.", true); await loadProducts(); }
-  catch (error) { showMessage(dashboardMessage, error.message); }
-});
-document.getElementById("resetForm").addEventListener("click", newProduct);
-document.getElementById("signOut").addEventListener("click", signOut);
-if (token) openDashboard();
+let draftImages = [];
+const loginPanel = document.getElementById("loginPanel"), dashboard = document.getElementById("dashboard"), loginMessage = document.getElementById("loginMessage"), dashboardMessage = document.getElementById("dashboardMessage"), form = document.getElementById("productForm"), productList = document.getElementById("productList");
+function escapeHtml(value = "") { return String(value).replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
+function showMessage(el, message, success = false) { el.textContent = message || ""; el.classList.toggle("success", Boolean(success)); }
+function headers() { return { "Content-Type":"application/json", Authorization:`Bearer ${token}` }; }
+async function request(url, options={}) { const response = await fetch(url, options), data = await response.json().catch(() => ({})); if (response.status === 401) signOut(); if (!response.ok) throw new Error(data.error || "Something went wrong."); return data; }
+function newProduct() { form.reset(); form.elements.active.value="true"; form.elements.sort_order.value="0"; form.elements.id.value=""; draftImages=[]; document.getElementById("variantsList").innerHTML=""; renderImages(); document.getElementById("formTitle").textContent="Add a product"; document.getElementById("resetForm").hidden=true; }
+function productValues(product) { for (const [key,value] of Object.entries(product)) { const field=form.elements.namedItem(key); if (!field) continue; if(field.type==="checkbox") field.checked=Boolean(value); else if (key!=="images" && key!=="variants") field.value=value ?? ""; } }
+function editProduct(id) { const product=products.find(p=>p.id===id); if(!product)return; productValues(product); draftImages=(product.images||[]).map((img,i)=>({image_url:img.image_url,sort_order:i,is_featured:Boolean(img.is_featured)})); renderImages(); renderVariants(product.variants||[]); document.getElementById("formTitle").textContent="Edit product"; document.getElementById("resetForm").hidden=false; window.scrollTo({top:0,behavior:"smooth"}); }
+function renderImages(){ const el=document.getElementById("imagePreview"); el.innerHTML=draftImages.map((img,i)=>`<div class="image-preview ${img.is_featured?"featured":""}" data-feature="${i}"><img src="${escapeHtml(img.image_url)}" alt=""><span class="featured-label">${img.is_featured?"FEATURED":"SET AS FEATURED"}</span><button type="button" class="remove-image" data-remove-image="${i}">×</button></div>`).join(""); }
+function renderVariants(variants=[]){ const el=document.getElementById("variantsList"); el.innerHTML=""; variants.forEach(addVariantRow); }
+function addVariantRow(variant={color:"",size:"",stock:0}){ const row=document.createElement("div"); row.className="variant-row"; row.innerHTML=`<input class="variant-color" placeholder="Color" value="${escapeHtml(variant.color)}"><input class="variant-size" placeholder="Size" value="${escapeHtml(variant.size)}"><input class="variant-stock" type="number" min="0" placeholder="Stock" value="${Number(variant.stock)||0}"><button type="button" class="remove-variant">×</button>`; document.getElementById("variantsList").appendChild(row); }
+async function uploadFiles(files){ if(!files.length)return; const payload=[]; for(const file of files){ if(file.size>8*1024*1024) throw new Error(`${file.name} is larger than 8MB.`); payload.push(await new Promise((resolve,reject)=>{const reader=new FileReader(); reader.onload=()=>resolve({name:file.name,data:reader.result}); reader.onerror=reject; reader.readAsDataURL(file);})); } const data=await request("/api/admin/upload-images",{method:"POST",headers:headers(),body:JSON.stringify({files:payload})}); (data.images||[]).forEach((img,i)=>draftImages.push({image_url:img.image_url,sort_order:draftImages.length+i,is_featured:draftImages.length===0&&i===0})); if(!draftImages.some(x=>x.is_featured)&&draftImages[0])draftImages[0].is_featured=true; renderImages(); }
+function collectVariants(){ return [...document.querySelectorAll("#variantsList .variant-row")].map(row=>({color:row.querySelector(".variant-color").value.trim(),size:row.querySelector(".variant-size").value.trim(),stock:Number(row.querySelector(".variant-stock").value)})).filter(v=>v.color||v.size); }
+function renderProducts(){ document.getElementById("inventoryCount").textContent=`${products.length} ${products.length===1?"ITEM":"ITEMS"}`; if(!products.length){productList.innerHTML='<p class="empty">No products yet.</p>';return;} productList.innerHTML=products.map(p=>`<article class="inventory-row"><img src="${escapeHtml(p.image||p.images?.[0]?.image_url||"assets/product-01.jpg")}" alt=""><div><h3>${escapeHtml(p.name)}</h3><p>₱${Number(p.price||0).toLocaleString("en-PH")} · ${Number(p.stock||0)} base stock</p><p class="meta">${escapeHtml(p.category||"Archive")}${p.variants?.length?` · ${p.variants.length} VARIANTS`:""}${p.images?.length?` · ${p.images.length} IMAGES`:""}${p.active?"":" · HIDDEN"}</p></div><div class="row-actions"><button data-edit="${escapeHtml(p.id)}">EDIT</button><button data-hide="${escapeHtml(p.id)}">${p.active?"HIDE":"SHOW"}</button></div></article>`).join(""); }
+async function loadProducts(){ const data=await request("/api/admin/products",{headers:headers()}); products=data.products||[]; renderProducts(); }
+async function openDashboard(){loginPanel.hidden=true;dashboard.hidden=false;try{await loadProducts();}catch(e){showMessage(dashboardMessage,e.message);}}
+function signOut(){token="";sessionStorage.removeItem("kloksieAdminToken");dashboard.hidden=true;loginPanel.hidden=false;newProduct();}
+document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();const b=e.currentTarget.querySelector("button");b.disabled=true;try{const password=new FormData(e.currentTarget).get("password"),data=await request("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});token=data.token;sessionStorage.setItem("kloksieAdminToken",token);e.currentTarget.reset();await openDashboard();}catch(err){showMessage(loginMessage,err.message);}finally{b.disabled=false;}});
+document.getElementById("imageFiles").addEventListener("change",async e=>{try{await uploadFiles([...e.target.files]);e.target.value="";showMessage(dashboardMessage,"Images uploaded.",true);}catch(err){showMessage(dashboardMessage,err.message);}});
+document.getElementById("imagePreview").addEventListener("click",e=>{const remove=e.target.closest("[data-remove-image]");if(remove){draftImages.splice(Number(remove.dataset.removeImage),1);if(draftImages.length&&!draftImages.some(x=>x.is_featured))draftImages[0].is_featured=true;return renderImages();}const card=e.target.closest("[data-feature]");if(card){draftImages.forEach((img,i)=>img.is_featured=i===Number(card.dataset.feature));draftImages.forEach((img,i)=>img.sort_order=i);renderImages();}});
+document.getElementById("addVariant").addEventListener("click",()=>addVariantRow());
+document.getElementById("variantsList").addEventListener("click",e=>{const b=e.target.closest(".remove-variant");if(b)b.parentElement.remove();});
+form.addEventListener("submit",async e=>{e.preventDefault();if(!draftImages.length)return showMessage(dashboardMessage,"Please upload at least one product image.");const variants=collectVariants(), data=Object.fromEntries(new FormData(form));data.active=form.elements.active.value==="true";data.price=Number(data.price);data.stock=Number(data.stock);data.sort_order=Number(data.sort_order);data.images=draftImages.map((img,i)=>({...img,sort_order:i}));data.variants=variants;const editing=Boolean(data.id),button=form.querySelector(".save-product");button.disabled=true;showMessage(dashboardMessage,"");try{await request("/api/admin/products",{method:editing?"PUT":"POST",headers:headers(),body:JSON.stringify(data)});newProduct();showMessage(dashboardMessage,editing?"Product updated.":"Product added.",true);await loadProducts();}catch(err){showMessage(dashboardMessage,err.message);}finally{button.disabled=false;}});
+productList.addEventListener("click",async e=>{const edit=e.target.closest("[data-edit]");if(edit)return editProduct(edit.dataset.edit);const hide=e.target.closest("[data-hide]");if(!hide)return;const p=products.find(x=>x.id===hide.dataset.hide);if(!p)return;try{await request("/api/admin/products",{method:"PUT",headers:headers(),body:JSON.stringify({...p,images:p.images||[],variants:p.variants||[],active:!p.active})});await loadProducts();showMessage(dashboardMessage,p.active?"Product hidden.":"Product is visible.",true);}catch(err){showMessage(dashboardMessage,err.message);}});
+document.getElementById("resetForm").addEventListener("click",newProduct);document.getElementById("signOut").addEventListener("click",signOut);if(token)openDashboard();else newProduct();
