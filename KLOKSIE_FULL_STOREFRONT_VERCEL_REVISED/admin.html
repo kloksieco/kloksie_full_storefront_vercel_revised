@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050505">
+  <title>KLOKSIE — Store Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="admin-header"><a href="/" class="admin-wordmark">KLOKSIE</a><a href="/" class="back-link">← VIEW STORE</a></header>
+  <main class="admin-shell">
+    <section class="login-card" id="loginPanel">
+      <p class="eyebrow">PRIVATE ACCESS</p><h1>Store admin</h1>
+      <p>Manage your live catalog, prices, images and stock. Your password is checked securely on the server.</p>
+      <form id="loginForm"><label>Admin password<input type="password" name="password" autocomplete="current-password" required></label><button type="submit">SIGN IN</button></form>
+      <p class="message" id="loginMessage" role="status"></p>
+    </section>
+
+    <section id="dashboard" hidden>
+      <div class="dashboard-head"><div><p class="eyebrow">KLOKSIE CONTROL ROOM</p><h1>Product editor</h1></div><button class="signout" id="signOut">SIGN OUT</button></div>
+      <p class="message dashboard-message" id="dashboardMessage" role="status"></p>
+      <div class="admin-grid">
+        <form class="product-form" id="productForm">
+          <div class="form-head"><h2 id="formTitle">Add a product</h2><button type="button" id="resetForm" hidden>NEW PRODUCT</button></div>
+          <input type="hidden" name="id">
+          <div class="field-grid"><label>Product name<input name="name" maxlength="120" required placeholder="e.g. ARCHIVE LEATHER JACKET"></label><label>Price (PHP)<input name="price" type="number" min="0" step="1" required placeholder="3500"></label></div>
+          <div class="field-grid"><label>Stock<input name="stock" type="number" min="0" step="1" required placeholder="1"></label><label>Category<select name="category"><option>Streetwear</option><option>Y2K</option><option selected>Archive</option><option>Accessories</option></select></label></div>
+          <div class="field-grid"><label>Size<input name="size" maxlength="40" placeholder="e.g. M or 37"></label><label>Badge<input name="tag" maxlength="40" placeholder="NEW / ONE OF ONE"></label></div>
+          <label>Image URL or local file path<input name="image" maxlength="1000" required placeholder="https://... or assets/product-01.jpg"></label>
+          <label>Image description<input name="alt" maxlength="200" placeholder="Describe the photo for accessibility"></label>
+          <label>Description<textarea name="description" rows="4" maxlength="1000" placeholder="Short product description"></textarea></label>
+          <div class="field-grid"><label>Display order<input name="sort_order" type="number" step="1" value="0"></label><label class="toggle-label"><input name="active" type="checkbox" checked><span>Visible in store</span></label></div>
+          <button class="save-product" type="submit">SAVE PRODUCT</button>
+        </form>
+        <section class="inventory"><div class="form-head"><h2>Your products</h2><span id="inventoryCount">0 ITEMS</span></div><div id="productList" class="product-list"><p class="empty">Loading product inventory…</p></div></section>
+      </div>
+    </section>
+  </main>
+  <script src="admin.js"></script>
+</body>
+</html>

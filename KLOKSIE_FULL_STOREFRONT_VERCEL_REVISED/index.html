@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050505">
+  <title>KLOKSIE — Streetwear / Y2K / Archive / Accessories</title>
+  <meta name="description" content="KLOKSIE — curated streetwear, Y2K, archive and accessories.">
+  <link rel="stylesheet" href="styles.css">
+  <style>.mobile-nav[hidden]{display:none}.contact-grid{grid-template-columns:repeat(2,1fr)}.h1-subtitle{font-size:.56em;letter-spacing:-.04em}</style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="#top" aria-label="KLOKSIE home">KLOKSIE</a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a href="#shop">SHOP</a>
+      <a href="#new">NEW DROP</a>
+      <a href="#categories">CATEGORIES</a>
+      <a href="#about">ABOUT</a>
+      <a href="https://www.instagram.com/kloksie.co/" target="_blank" rel="noreferrer">INSTAGRAM ↗</a>
+    </nav>
+    <div class="header-actions">
+      <a class="admin-link" href="/admin.html">ADMIN</a>
+      <button class="cart-button" id="openCart" aria-label="Open shopping bag">BAG <span id="cartCount">0</span></button>
+      <button class="menu-button" id="openMenu" aria-label="Open menu" aria-expanded="false">MENU</button>
+    </div>
+  </header>
+
+  <nav class="mobile-nav" id="mobileNav" aria-label="Mobile navigation" hidden>
+    <a href="#shop">SHOP</a><a href="#new">NEW DROP</a><a href="#categories">CATEGORIES</a>
+    <a href="#about">ABOUT</a><a href="https://www.instagram.com/kloksie.co/" target="_blank" rel="noreferrer">INSTAGRAM ↗</a>
+    <a href="/admin.html">ADMIN</a>
+  </nav>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-logo-wrap"><img src="assets/kloksie-logo.png" alt="Kloksie" class="hero-logo"></div>
+      <div class="hero-copy">
+        <p class="eyebrow">CURATED. DISTINCT. BOLD.</p>
+        <h1>Pieces with<br>presence.<br><span class="h1-subtitle"></span></h1>
+        <p class="hero-text">No rules to follow.<br>Just pieces worth wearing.</p>
+        <a class="button button-light" href="#shop">SHOP THE DROP</a>
+      </div>
+    </section>
+
+    <section class="ticker" aria-label="KLOKSIE collection announcement"><div>NEW DROP&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;KLOKSIE&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;CURATED ARCHIVE&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;NEW DROP&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;KLOKSIE&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;CURATED ARCHIVE&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;</div></section>
+
+    <section class="section collection-section" id="new">
+      <div class="section-head">
+        <div><p class="eyebrow">01 — NEW DROP</p><h2>Latest selection</h2></div>
+        <a href="#shop" class="text-link">VIEW ALL →</a>
+      </div>
+      <p class="collection-intro">A tight selection of one-off finds and considered staples. When a piece is gone, it is gone.</p>
+      <div class="product-grid product-grid-featured" id="featuredProducts" aria-live="polite"></div>
+    </section>
+
+    <section class="category-strip" id="categories" aria-label="Shop by category">
+      <button data-category="Streetwear">STREETWEAR <span>↗</span></button>
+      <button data-category="Y2K">Y2K <span>↗</span></button>
+      <button data-category="Grunge/Archive">ARCHIVE <span>↗</span></button>
+      <button data-category="Accessories">ACCESSORIES <span>↗</span></button>
+    </section>
+
+    <section class="section shop-section" id="shop">
+      <div class="section-head">
+        <div><p class="eyebrow">02 — THE STORE</p><h2>Shop all</h2></div>
+        <p class="product-count" id="productCount">LOADING PIECES…</p>
+      </div>
+      <div class="filters" id="categoryFilters" aria-label="Product filters"></div>
+      <div class="product-grid" id="productGrid" aria-live="polite"></div>
+      <p class="empty-products" id="emptyProducts" hidden>No pieces in this category right now. Try another collection.</p>
+    </section>
+
+    <section class="manifesto" id="about">
+      <div class="manifesto-number">03</div>
+      <div><p class="eyebrow">THE COLLECTIVE</p><h2><br>Not ordinary.</h2><p>Kloksie is a curated fashion destination where different styles, eras, and influences come together.<br><br>From streetwear and Y2K, archive silhouettes, everyday pieces, and statement accessories — our collections are made for exploring your style, not following one.<br><br>Some days are bold.<br>Some days are simple.<br>Some days, you just want something different.<br><br>There’s no single way to wear Kloksie. Mix it. Layer it. Make it yours.<br><br>Fashion is personal.<br>Your style doesn’t have to fit a category.<br><br><strong>Kloksie — curated for every version of you.</strong></p></div>
+    </section>
+
+    <section class="section contact-section" id="contact">
+      <div class="section-head"><div><p class="eyebrow">04 — STAY CONNECTED</p><h2>Find KLOKSIE</h2></div></div>
+      <div class="contact-grid">
+        <a href="https://www.instagram.com/kloksie.co/" target="_blank" rel="noreferrer" class="contact-card">INSTAGRAM <span>↗</span></a>
+        <a href="/admin.html" class="contact-card">STORE ADMIN <span>↗</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div><img src="assets/kloksie-logo.png" alt="KLOKSIE" class="footer-logo"></div>
+    <div class="footer-links"><a href="#about">ABOUT</a><a href="#contact">CONTACT</a><a href="#shop">SHOP</a><a href="https://www.instagram.com/kloksie.co/" target="_blank" rel="noreferrer">INSTAGRAM</a><a href="/admin.html">ADMIN</a></div>
+    <p>© <span id="year"></span> KLOKSIE. ALL RIGHTS RESERVED.</p>
+  </footer>
+
+  <aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+    <div class="cart-overlay" id="closeCart"></div>
+    <div class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="bagTitle">
+      <div class="cart-head"><h2 id="bagTitle">YOUR BAG</h2><button id="closeCartBtn" aria-label="Close shopping bag">×</button></div>
+      <div id="cartItems" class="cart-items"><p class="empty-cart">Your bag is empty.</p></div>
+      <div class="cart-footer"><div class="cart-total"><span>TOTAL</span><strong id="cartTotal">₱0</strong></div><button class="button button-dark" id="checkoutBtn">PAY WITH PAYMONGO</button><p class="cart-note">Secure hosted checkout — GCash, Maya, cards and QR Ph. Payment details are entered on PayMongo.</p></div>
+    </div>
+  </aside>
+
+  <dialog id="checkoutDialog">
+    <form method="dialog" class="checkout-form" id="checkoutForm">
+      <button class="dialog-close" value="cancel" aria-label="Close checkout">×</button>
+      <p class="eyebrow">CHECKOUT</p><h2>Complete your order</h2>
+      <label>Full name<input name="name" autocomplete="name" required></label>
+      <label>Email<input name="email" type="email" autocomplete="email" required></label>
+      <label>Phone<input name="phone" autocomplete="tel" required></label>
+      <label>Shipping address<textarea name="address" rows="3" autocomplete="street-address" required></textarea></label>
+      <button class="button button-dark" type="submit">CONTINUE TO PAYMENT</button>
+      <p class="form-note">You’ll be redirected to PayMongo’s secure checkout to choose GCash, Maya, cards or QR Ph.</p>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>
