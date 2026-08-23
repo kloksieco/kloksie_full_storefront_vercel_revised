@@ -1,104 +1,32 @@
-const FALLBACK_PRODUCTS = [
-  { id: "kloksie-01", name: "KLOKSIE LOW 01", description: "Black / Off-white sneaker", image: "assets/product-01.jpg", alt: "Black low-top sneaker", price: 0, stock: 0, tag: "COMING SOON", size: "", category: "Archive", active: true, sort_order: 1 },
-  { id: "kloksie-02", name: "RICK OWENS", description: "Sculptural low-top sneaker", image: "assets/product-02.jpg", alt: "Rick Owens sneaker", price: 3500, stock: 1, tag: "NEW", size: "37", category: "Archive", active: true, sort_order: 2 }
-];
-
-let products = FALLBACK_PRODUCTS;
-let activeCategory = "All";
-let cart = JSON.parse(localStorage.getItem("kloksieCart") || "[]");
-const money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
-const cartDrawer = document.getElementById("cartDrawer");
-const cartItems = document.getElementById("cartItems");
-const cartCount = document.getElementById("cartCount");
-const cartTotal = document.getElementById("cartTotal");
-
-function escapeHtml(value = "") { return String(value).replace(/[&<>'"]/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", '"':"&quot;" })[char]); }
-function safeImage(value) { const image = String(value || "").trim(); return /^(https?:\/\/|\/|assets\/)/i.test(image) ? image : "assets/product-01.jpg"; }
-function priceLabel(product) { return Number(product.price) > 0 ? money.format(product.price) : "PRICE TBD"; }
-function getProduct(id) { return products.find(product => product.id === id); }
-function saveCart() { localStorage.setItem("kloksieCart", JSON.stringify(cart)); renderCart(); }
-
-function productCard(product) {
-  const unavailable = !Number(product.price) || Number(product.stock) < 1;
-  const label = !Number(product.price) ? "PRICE TBD" : Number(product.stock) < 1 ? "SOLD OUT" : "ADD TO BAG";
-  const subline = [product.description, product.size ? `SIZE ${product.size}` : ""].filter(Boolean).join(" · ");
-  return `<article class="product-card"><div class="product-image-wrap">${product.tag ? `<span class="product-tag">${escapeHtml(product.tag)}</span>` : ""}<img src="${escapeHtml(safeImage(product.image))}" alt="${escapeHtml(product.alt || product.name)}" class="product-image" loading="lazy"><button class="quick-add" data-add="${escapeHtml(product.id)}" ${unavailable ? "disabled" : ""}>${label}</button></div><div class="product-info"><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(subline || product.category || "KLOKSIE SELECTED")}</p></div><strong>${priceLabel(product)}</strong></div></article>`;
-}
-
-function renderFilters() {
-  const fixed = ["All", "Streetwear", "Y2K", "Archive", "Accessories"];
-  const categories = [...new Set(products.map(product => product.category).filter(Boolean))];
-  const list = [...new Set([...fixed, ...categories])];
-  document.getElementById("categoryFilters").innerHTML = list.map(category => `<button class="filter-button ${category === activeCategory ? "is-active" : ""}" data-filter="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join("");
-}
-
-function renderProducts() {
-  const selected = activeCategory === "All" ? products : products.filter(product => product.category === activeCategory);
-  document.getElementById("productGrid").innerHTML = selected.map(productCard).join("");
-  document.getElementById("emptyProducts").hidden = Boolean(selected.length);
-  document.getElementById("productCount").textContent = `${selected.length} ${selected.length === 1 ? "PIECE" : "PIECES"}`;
-  const featured = products.filter(product => product.tag === "NEW" || product.tag === "NEW DROP").slice(0, 2);
-  document.getElementById("featuredProducts").innerHTML = (featured.length ? featured : products.slice(0, 2)).map(productCard).join("");
-}
-
-function setCategory(category) { activeCategory = category; renderFilters(); renderProducts(); document.getElementById("shop").scrollIntoView({ behavior: "smooth", block: "start" }); }
-
-function addToCart(id) {
-  const product = getProduct(id);
-  if (!product || !Number(product.price)) return alert("This item does not have a price yet.");
-  if (Number(product.stock) < 1) return alert("This piece has sold out.");
-  const existing = cart.find(item => item.id === id);
-  if (existing) { if (existing.quantity >= product.stock) return alert("Only the available stock can be added."); existing.quantity += 1; }
-  else cart.push({ id: product.id, quantity: 1 });
-  saveCart(); openCart();
-}
-
-function changeQuantity(id, difference) {
-  const item = cart.find(entry => entry.id === id); const product = getProduct(id);
-  if (!item || !product) return;
-  item.quantity += difference;
-  if (item.quantity < 1) cart = cart.filter(entry => entry.id !== id);
-  if (item.quantity > product.stock) { item.quantity = product.stock; alert("Only the available stock can be added."); }
-  saveCart();
-}
-
-function renderCart() {
-  cart = cart.filter(item => getProduct(item.id) && getProduct(item.id).active !== false);
-  const count = cart.reduce((sum, item) => sum + item.quantity, 0); cartCount.textContent = count;
-  if (!cart.length) { cartItems.innerHTML = '<p class="empty-cart">Your bag is empty.</p>'; cartTotal.textContent = "₱0"; localStorage.setItem("kloksieCart", JSON.stringify(cart)); return; }
-  cartItems.innerHTML = cart.map(item => { const product = getProduct(item.id); return `<div class="cart-row"><img src="${escapeHtml(safeImage(product.image))}" alt="${escapeHtml(product.name)}"><div><h3>${escapeHtml(product.name)}</h3><p>${priceLabel(product)}</p><div class="quantity-controls"><button data-quantity="-1" data-id="${escapeHtml(product.id)}" aria-label="Remove one">−</button><span>${item.quantity}</span><button data-quantity="1" data-id="${escapeHtml(product.id)}" aria-label="Add one">+</button></div></div><button class="remove-item" data-remove="${escapeHtml(product.id)}">REMOVE</button></div>`; }).join("");
-  const total = cart.reduce((sum, item) => sum + (getProduct(item.id).price * item.quantity), 0); cartTotal.textContent = money.format(total); localStorage.setItem("kloksieCart", JSON.stringify(cart));
-}
-
-function openCart() { cartDrawer.classList.add("open"); cartDrawer.setAttribute("aria-hidden", "false"); }
-function closeCart() { cartDrawer.classList.remove("open"); cartDrawer.setAttribute("aria-hidden", "true"); }
-
-async function loadProducts() {
-  try { const response = await fetch("/api/products", { headers: { Accept: "application/json" } }); const data = await response.json(); if (response.ok && Array.isArray(data.products) && data.products.length) products = data.products; }
-  catch (error) { console.warn("Using storefront preview products until the catalog is connected.", error); }
-  renderFilters(); renderProducts(); renderCart();
-}
-
-document.addEventListener("click", event => {
-  const add = event.target.closest("[data-add]"); if (add) return addToCart(add.dataset.add);
-  const filter = event.target.closest("[data-filter], [data-category]"); if (filter) return setCategory(filter.dataset.filter || filter.dataset.category);
-  const remove = event.target.closest("[data-remove]"); if (remove) { cart = cart.filter(item => item.id !== remove.dataset.remove); return saveCart(); }
-  const quantity = event.target.closest("[data-quantity]"); if (quantity) return changeQuantity(quantity.dataset.id, Number(quantity.dataset.quantity));
-});
-document.getElementById("openCart").addEventListener("click", openCart);
-document.getElementById("closeCart").addEventListener("click", closeCart);
-document.getElementById("closeCartBtn").addEventListener("click", closeCart);
-document.getElementById("openMenu").addEventListener("click", () => { const menu = document.getElementById("mobileNav"); const open = menu.hidden; menu.hidden = !open; document.getElementById("openMenu").setAttribute("aria-expanded", String(open)); });
-document.getElementById("mobileNav").addEventListener("click", () => { document.getElementById("mobileNav").hidden = true; document.getElementById("openMenu").setAttribute("aria-expanded", "false"); });
-
-const checkoutDialog = document.getElementById("checkoutDialog");
-document.getElementById("checkoutBtn").addEventListener("click", () => { if (!cart.length) return alert("Your bag is empty."); if (cart.some(item => { const product = getProduct(item.id); return !product || !product.price || product.stock < item.quantity; })) return alert("Please update your bag before checkout."); checkoutDialog.showModal(); });
-document.getElementById("checkoutForm").addEventListener("submit", async event => {
-  event.preventDefault(); if (!cart.length) return;
-  const button = event.currentTarget.querySelector('button[type="submit"]'); const original = button.textContent; button.disabled = true; button.textContent = "CONNECTING TO PAYMONGO…";
-  const form = new FormData(event.currentTarget); const customer = Object.fromEntries(["name", "email", "phone", "address"].map(key => [key, String(form.get(key) || "").trim()]));
-  try { const response = await fetch("/api/create-checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cart, customer }) }); const data = await response.json(); if (!response.ok || !data.checkout_url) throw new Error(data.error || "Unable to create PayMongo checkout."); localStorage.setItem("kloksieLastOrderReference", data.reference_number || ""); window.location.assign(data.checkout_url); }
-  catch (error) { alert(error.message || "Payment setup failed. Please try again."); button.disabled = false; button.textContent = original; }
-});
-document.getElementById("year").textContent = new Date().getFullYear();
-loadProducts();
+const FALLBACK_PRODUCTS=[{id:"kloksie-01",name:"KLOKSIE LOW 01",description:"Black / Off-white sneaker",image:"assets/product-01.jpg",alt:"Black low-top sneaker",price:0,stock:0,tag:"COMING SOON",size:"",category:"Archive",active:true,sort_order:1,images:[{image_url:"assets/product-01.jpg",is_featured:true}],variants:[]},{id:"kloksie-02",name:"RICK OWENS",description:"Sculptural low-top sneaker",image:"assets/product-02.jpg",alt:"Rick Owens sneaker",price:3500,stock:1,tag:"NEW",size:"37",category:"Archive",active:true,sort_order:2,images:[{image_url:"assets/product-02.jpg",is_featured:true}],variants:[{color:"Black",size:"37",stock:1}]}];
+let products=FALLBACK_PRODUCTS,activeCategory="All",cart=JSON.parse(localStorage.getItem("kloksieCart")||"[]"),detailProduct=null,detailQuantity=1,detailSelections={};
+const money=new Intl.NumberFormat("en-PH",{style:"currency",currency:"PHP",maximumFractionDigits:0});
+const $=id=>document.getElementById(id),cartDrawer=$("cartDrawer"),cartItems=$("cartItems"),cartCount=$("cartCount"),cartTotal=$("cartTotal"),productModal=$("productModal");
+function escapeHtml(v=""){return String(v).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));}
+function safeImage(v){const x=String(v||"").trim();return /^(https?:\/\/|\/|assets\/)/i.test(x)?x:"assets/product-01.jpg";}
+function priceLabel(p){return Number(p.price)>0?money.format(p.price):"PRICE TBD";}
+function getProduct(id){return products.find(p=>p.id===id);}
+function productImages(p){const imgs=Array.isArray(p.images)&&p.images.length?p.images:[];if(!imgs.length&&p.image)imgs.push({image_url:p.image,is_featured:true,sort_order:0});return imgs.sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));}
+function variants(p){return Array.isArray(p.variants)?p.variants:[];}
+function saveCart(){localStorage.setItem("kloksieCart",JSON.stringify(cart));renderCart();}
+function productCard(p){const unavailable=!Number(p.price)||Number(p.stock)<1;const label=!Number(p.price)?"PRICE TBD":Number(p.stock)<1?"SOLD OUT":"VIEW PIECE";const sub=[p.description,p.size?`SIZE ${p.size}`:""].filter(Boolean).join(" · ");return `<article class="product-card" data-product="${escapeHtml(p.id)}"><div class="product-image-wrap">${p.tag?`<span class="product-tag">${escapeHtml(p.tag)}</span>`:""}<img src="${escapeHtml(safeImage(p.image||productImages(p)[0]?.image_url))}" alt="${escapeHtml(p.alt||p.name)}" class="product-image" loading="lazy"><button class="quick-add" data-view="${escapeHtml(p.id)}" ${unavailable?"disabled":""}>${label}</button></div><div class="product-info"><div><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(sub||p.category||"KLOKSIE SELECTED")}</p></div><strong>${priceLabel(p)}</strong></div></article>`;}
+function renderFilters(){const fixed=["All","Streetwear","Y2K","Grunge/Archive","Accessories","Archive"],cats=[...new Set(products.map(p=>p.category).filter(Boolean))],list=[...new Set([...fixed,...cats])];$("categoryFilters").innerHTML=list.map(c=>`<button class="filter-button ${c===activeCategory?"is-active":""}" data-filter="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");}
+function renderProducts(){const selected=activeCategory==="All"?products:products.filter(p=>p.category===activeCategory);$("productGrid").innerHTML=selected.map(productCard).join("");$("emptyProducts").hidden=Boolean(selected.length);$("productCount").textContent=`${selected.length} ${selected.length===1?"PIECE":"PIECES"}`;const featured=products.filter(p=>p.tag==="NEW"||p.tag==="NEW DROP").slice(0,2);$("featuredProducts").innerHTML=(featured.length?featured:products.slice(0,2)).map(productCard).join("");}
+function setCategory(c){activeCategory=c;renderFilters();renderProducts();$("shop").scrollIntoView({behavior:"smooth",block:"start"});}
+function openProduct(id){const p=getProduct(id);if(!p)return;detailProduct=p;detailQuantity=1;detailSelections={};const imgs=productImages(p);$("detailMainImage").src=safeImage(imgs[0]?.image_url||p.image);$("detailMainImage").alt=p.alt||p.name;$("detailThumbnails").innerHTML=imgs.map((img,i)=>`<button class="detail-thumb ${i===0?"active":""}" data-image-index="${i}"><img src="${escapeHtml(safeImage(img.image_url))}" alt=""></button>`).join("");$("detailTag").textContent=p.tag||"";$("productDetailName").textContent=p.name;$("detailPrice").textContent=priceLabel(p);$("detailDescription").textContent=p.description||"";$("detailQuantity").textContent="1";renderDetailOptions();updateDetailStock();productModal.classList.add("open");productModal.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";}
+function closeProduct(){productModal.classList.remove("open");productModal.setAttribute("aria-hidden","true");document.body.style.overflow="";detailProduct=null;}
+function renderDetailOptions(){const p=detailProduct,vs=variants(p),colors=[...new Set(vs.map(v=>v.color).filter(Boolean))],sizes=[...new Set(vs.map(v=>v.size).filter(Boolean))],html=[];if(colors.length)html.push(`<div class="detail-option"><span>COLOR</span><div class="option-list">${colors.map(v=>`<button class="option-button ${detailSelections.color===v?"selected":""}" data-option="color" data-value="${escapeHtml(v)}">${escapeHtml(v)}</button>`).join("")}</div></div>`);if(sizes.length)html.push(`<div class="detail-option"><span>SIZE</span><div class="option-list">${sizes.map(v=>`<button class="option-button ${detailSelections.size===v?"selected":""}" data-option="size" data-value="${escapeHtml(v)}">${escapeHtml(v)}</button>`).join("")}</div></div>`);$("detailOptions").innerHTML=html.join("");}
+function selectedVariant(){if(!detailProduct)return null;const vs=variants(detailProduct),colors=[...new Set(vs.map(v=>v.color).filter(Boolean))],sizes=[...new Set(vs.map(v=>v.size).filter(Boolean))];if(!vs.length)return null;if(colors.length&&!detailSelections.color)return null;if(sizes.length&&!detailSelections.size)return null;return vs.find(v=>(!colors.length||v.color===detailSelections.color)&&(!sizes.length||v.size===detailSelections.size))||null;}
+function updateDetailStock(){if(!detailProduct)return;const v=selectedVariant(),required=variants(detailProduct).length>0,stock=v?v.stock:detailProduct.stock;$("detailStock").textContent=required&&!v?"SELECT COLOR AND SIZE":stock>0?`${stock} IN STOCK`:"SOLD OUT";$("detailAdd").disabled=Number(stock)<1||(!v&&required)||!Number(detailProduct.price);}
+function addSelectedToCart(){const p=detailProduct;if(!p||!Number(p.price))return alert("This item does not have a price yet.");const v=selectedVariant(),hasVars=variants(p).length>0;if(hasVars&&!v)return alert("Please select the available color and size before adding to your bag.");const stock=v?v.stock:p.stock;if(stock<detailQuantity)return alert("Only the available stock can be added.");const key=`${p.id}::${v?.color||""}::${v?.size||""}`;const existing=cart.find(i=>i.key===key);if(existing){if(existing.quantity+detailQuantity>stock)return alert("Only the available stock can be added.");existing.quantity+=detailQuantity;}else cart.push({key,id:p.id,color:v?.color||"",size:v?.size||"",quantity:detailQuantity});saveCart();closeProduct();openCart();}
+function changeQuantity(id,key,diff){const item=cart.find(i=>(i.key===key||(!i.key&&i.id===id)));const p=getProduct(id);if(!item||!p)return;const v=variants(p).find(x=>(x.color||"")===(item.color||"")&&(x.size||"")===(item.size||"")),stock=v?v.stock:p.stock;item.quantity+=diff;if(item.quantity<1)cart=cart.filter(x=>x!==item);if(item.quantity>stock){item.quantity=stock;alert("Only the available stock can be added.");}saveCart();}
+function renderCart(){cart=cart.filter(i=>getProduct(i.id)&&getProduct(i.id).active!==false);cartCount.textContent=cart.reduce((s,i)=>s+i.quantity,0);if(!cart.length){cartItems.innerHTML='<p class="empty-cart">Your bag is empty.</p>';cartTotal.textContent="₱0";localStorage.setItem("kloksieCart",JSON.stringify(cart));return;}cartItems.innerHTML=cart.map(i=>{const p=getProduct(i.id);const detail=[i.color,i.size].filter(Boolean).join(" / ");return `<div class="cart-row"><img src="${escapeHtml(safeImage(p.image||productImages(p)[0]?.image_url))}" alt="${escapeHtml(p.name)}"><div><h3>${escapeHtml(p.name)}</h3><p>${priceLabel(p)}${detail?` · ${escapeHtml(detail)}`:""}</p><div class="quantity-controls"><button data-quantity="-1" data-id="${escapeHtml(p.id)}" data-key="${escapeHtml(i.key||p.id)}">−</button><span>${i.quantity}</span><button data-quantity="1" data-id="${escapeHtml(p.id)}" data-key="${escapeHtml(i.key||p.id)}">+</button></div></div><button class="remove-item" data-remove="${escapeHtml(i.key||p.id)}">REMOVE</button></div>`;}).join("");cartTotal.textContent=money.format(cart.reduce((s,i)=>s+getProduct(i.id).price*i.quantity,0));localStorage.setItem("kloksieCart",JSON.stringify(cart));}
+function openCart(){cartDrawer.classList.add("open");cartDrawer.setAttribute("aria-hidden","false");}function closeCart(){cartDrawer.classList.remove("open");cartDrawer.setAttribute("aria-hidden","true");}
+async function loadProducts(){try{const r=await fetch("/api/products",{headers:{Accept:"application/json"}}),d=await r.json();if(r.ok&&Array.isArray(d.products))products=d.products;}catch(e){console.warn("Catalog load failed; using preview products",e);}renderFilters();renderProducts();renderCart();}
+document.addEventListener("click",e=>{const view=e.target.closest("[data-view],.product-card");if(view&&!e.target.closest("button[data-filter]")){const id=view.dataset.view||view.dataset.product;if(id)return openProduct(id);}const filter=e.target.closest("[data-filter], [data-category]");if(filter)return setCategory(filter.dataset.filter||filter.dataset.category);const thumb=e.target.closest("[data-image-index]");if(thumb&&detailProduct){const img=productImages(detailProduct)[Number(thumb.dataset.imageIndex)];if(img){$("detailMainImage").src=safeImage(img.image_url);document.querySelectorAll(".detail-thumb").forEach(x=>x.classList.remove("active"));thumb.classList.add("active");}return;}const opt=e.target.closest("[data-option]");if(opt){detailSelections[opt.dataset.option]=opt.dataset.value;renderDetailOptions();updateDetailStock();return;}const remove=e.target.closest("[data-remove]");if(remove){cart=cart.filter(i=>(i.key||i.id)!==remove.dataset.remove);return saveCart();}const q=e.target.closest("[data-quantity]");if(q)return changeQuantity(q.dataset.id,q.dataset.key,Number(q.dataset.quantity));if(e.target.closest("[data-close-product]"))closeProduct();});
+$("openCart").addEventListener("click",openCart);$("closeCart").addEventListener("click",closeCart);$("closeCartBtn").addEventListener("click",closeCart);$("openMenu").addEventListener("click",()=>{const m=$("mobileNav"),open=m.hidden;m.hidden=!open;$("openMenu").setAttribute("aria-expanded",String(open));});$("mobileNav").addEventListener("click",()=>{$("mobileNav").hidden=true;$("openMenu").setAttribute("aria-expanded","false");});
+$("detailMinus").addEventListener("click",()=>{detailQuantity=Math.max(1,detailQuantity-1);$("detailQuantity").textContent=detailQuantity;});$("detailPlus").addEventListener("click",()=>{const v=selectedVariant(),stock=v?v.stock:(detailProduct?.stock||0);if(detailQuantity<stock)detailQuantity++;$("detailQuantity").textContent=detailQuantity;});$("detailAdd").addEventListener("click",addSelectedToCart);
+document.querySelectorAll("[data-close-product]").forEach(x=>x.addEventListener("click",closeProduct));
+const checkoutDialog=$("checkoutDialog");$("checkoutBtn").addEventListener("click",()=>{if(!cart.length)return alert("Your bag is empty.");if(cart.some(i=>{const p=getProduct(i.id),v=variants(p).find(x=>(x.color||"")===(i.color||"")&&(x.size||"")===(i.size||""));return !p||!p.price||(v?v.stock:p.stock)<i.quantity}))return alert("Please update your bag before checkout.");checkoutDialog.showModal();});
+$("checkoutForm").addEventListener("submit",async e=>{e.preventDefault();if(!cart.length)return;const b=e.currentTarget.querySelector('button[type="submit"]'),original=b.textContent;b.disabled=true;b.textContent="CONNECTING TO PAYMONGO…";const form=new FormData(e.currentTarget),customer=Object.fromEntries(["name","email","phone","address"].map(k=>[k,String(form.get(k)||"").trim()]));try{const r=await fetch("/api/create-checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:cart,customer})}),d=await r.json();if(!r.ok||!d.checkout_url)throw new Error(d.error||"Unable to create PayMongo checkout.");localStorage.setItem("kloksieLastOrderReference",d.reference_number||"");location.assign(d.checkout_url);}catch(err){alert(err.message||"Payment setup failed. Please try again.");b.disabled=false;b.textContent=original;}});
+$("year").textContent=new Date().getFullYear();loadProducts();
