@@ -21,7 +21,7 @@ export default function EditProductPage() {
     image: '',
     stock: 0,
     sku: '',
-    status: 'active' as const,
+    status: 'active' as 'active' | 'inactive' | 'draft',
   });
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function EditProductPage() {
         image: productData.image,
         stock: productData.stock,
         sku: productData.sku,
-        status: productData.status,
+        status: productData.status as 'active' | 'inactive' | 'draft',
       });
     }
   }, [params.id, getProductById]);
