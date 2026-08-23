@@ -41,5 +41,8 @@ module.exports = async (req, res) => {
       return json(res, 200, { product: await hydrate(updated[0]) });
     }
     return json(res, 405, { error: "Method not allowed." });
-  } catch (error) { console.error(error); return json(res, error.status === 409 ? 409 : 400, { error: error.message || "Unable to save product." }); }
+  } catch (error) {
+    console.error("Admin products error:", error);
+    return json(res, error.status === 409 ? 409 : 500, { error: error.message || "Unable to load products. Please check the Supabase schema." });
+  }
 };
