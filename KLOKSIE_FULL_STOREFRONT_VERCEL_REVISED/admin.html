@@ -7,34 +7,15 @@
 </style>
 </head>
 <body>
-<div id="loginPanel" class="login-panel">
-  <h1>KLOKSIE ADMIN</h1>
-  <form id="loginForm"><label style="font-size:10px;letter-spacing:.12em">ADMIN PASSWORD<input name="password" type="password" required style="display:block;width:100%;margin:8px 0 18px;padding:12px;box-sizing:border-box"></label><button class="button button-dark" type="submit">LOGIN</button></form><p id="loginMessage" class="message"></p>
-</div>
-<div id="dashboard" class="admin-shell" hidden>
-  <header class="admin-top"><div><p class="eyebrow">KLOKSIE</p><h1 style="font-size:42px;margin:0">STORE ADMIN</h1></div><div><a href="/">← STORE</a><button class="logout" id="signOut">LOG OUT</button></div></header>
-  <p id="dashboardMessage" class="message"></p>
-  <form id="productForm" class="admin-form">
-    <h2 id="formTitle" style="font-size:38px;margin:0 0 25px">Add a product</h2>
-    <input type="hidden" name="id">
-    <div class="admin-form-grid">
-      <div class="admin-field"><label>PRODUCT NAME *</label><input name="name" required></div>
-      <div class="admin-field"><label>PRICE (PHP) *</label><input name="price" type="number" min="0" step="1" required></div>
-      <div class="admin-field"><label>BASE STOCK *</label><input name="stock" type="number" min="0" required></div>
-      <div class="admin-field"><label>CATEGORY</label><select name="category"><option>Streetwear</option><option>Y2K</option><option>Grunge/Archive</option><option>Accessories</option><option>Archive</option></select></div>
-      <div class="admin-field"><label>TAG</label><input name="tag" placeholder="NEW, SOLD OUT, etc."></div>
-      <div class="admin-field"><label>DEFAULT SIZE / LEGACY SIZE</label><input name="size" placeholder="Optional"></div>
-      <div class="admin-field full"><label>DESCRIPTION *</label><textarea name="description" required></textarea></div>
-      <div class="admin-field full"><label>PRODUCT IMAGES — FIRST IMAGE IS FEATURED BY DEFAULT</label><div class="upload-zone"><input id="imageFiles" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple><div id="imagePreview" class="image-preview-grid"></div></div></div>
-      <div class="admin-field full"><label>COLOR / SIZE VARIATIONS</label><div id="variantsList"></div><button type="button" class="admin-actions secondary" id="addVariant" style="padding:9px 12px">+ ADD VARIATION</button></div>
-      <div class="admin-field"><label>ACTIVE</label><select name="active"><option value="true">Visible</option><option value="false">Hidden</option></select></div>
-      <div class="admin-field"><label>SORT ORDER</label><input name="sort_order" type="number" value="0"></div>
-    </div>
-    <div class="admin-actions"><button class="save-product" type="submit">SAVE PRODUCT</button><button type="button" class="secondary" id="resetForm">CLEAR</button></div>
-  </form>
-  <section class="inventory"><div style="display:flex;justify-content:space-between;align-items:end"><div><p class="eyebrow">INVENTORY</p><h2 style="font-size:38px;margin:0">Products</h2></div><span id="inventoryCount"></span></div><div id="productList"></div></section>
-  <section class="orders"><div class="orders-head"><div><p class="eyebrow">ORDERS</p><h2 style="font-size:38px;margin:0">Customer orders</h2></div><button class="order-view" id="refreshOrders">REFRESH</button></div><p id="ordersMessage" class="message"></p><div id="ordersList"></div></section>
-</div>
-<script src="admin.js"></script>
-</body>
-</html>
+<div id="loginPanel" class="login-panel"><h1>KLOKSIE ADMIN</h1><form id="loginForm"><label style="font-size:10px;letter-spacing:.12em">ADMIN PASSWORD<input name="password" type="password" required style="display:block;width:100%;margin:8px 0 18px;padding:12px;box-sizing:border-box"></label><button class="button button-dark" type="submit">LOGIN</button></form><p id="loginMessage" class="message"></p></div>
+<div id="dashboard" class="admin-shell" hidden><header class="admin-top"><div><p class="eyebrow">KLOKSIE</p><h1 style="font-size:42px;margin:0">STORE ADMIN</h1></div><div><a href="/">← STORE</a><button class="logout" id="signOut">LOG OUT</button></div></header><p id="dashboardMessage" class="message"></p>
+<form id="productForm" class="admin-form"><h2 id="formTitle" style="font-size:38px;margin:0 0 25px">Add a product</h2><input type="hidden" name="id"><div class="admin-form-grid">
+<div class="admin-field"><label>PRODUCT NAME *</label><input name="name" required></div><div class="admin-field"><label>PRICE (PHP) *</label><input name="price" type="number" min="0" step="1" required></div><div class="admin-field"><label>BASE STOCK *</label><input name="stock" type="number" min="0" required></div>
+<div class="admin-field"><label>CATEGORY</label><select name="category"><option value="Shoes">SHOES</option><option value="Shirts">SHIRTS</option><option value="Accessories">ACCESSORIES</option><option value="Pants">PANTS</option><option value="Shorts">SHORTS</option><option value="Long Sleeve">LONG SLEEVE</option><option value="Jackets">JACKETS</option></select></div>
+<div class="admin-field"><label>TAG</label><input name="tag" placeholder="NEW, SOLD OUT, etc."></div><div class="admin-field"><label>DEFAULT SIZE / LEGACY SIZE</label><input name="size" placeholder="Optional"></div><div class="admin-field full"><label>DESCRIPTION *</label><textarea name="description" required></textarea></div>
+<div class="admin-field full"><label>PRODUCT IMAGES — FIRST IMAGE IS FEATURED BY DEFAULT</label><div class="upload-zone"><input id="imageFiles" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple><div id="imagePreview" class="image-preview-grid"></div></div></div>
+<div class="admin-field full"><label>COLOR / SIZE VARIATIONS</label><div id="variantsList"></div><button type="button" class="admin-actions secondary" id="addVariant" style="padding:9px 12px">+ ADD VARIATION</button></div><div class="admin-field"><label>ACTIVE</label><select name="active"><option value="true">Visible</option><option value="false">Hidden</option></select></div><div class="admin-field"><label>SORT ORDER</label><input name="sort_order" type="number" value="0"></div></div>
+<div class="admin-actions"><button class="save-product" type="submit">SAVE PRODUCT</button><button type="button" class="secondary" id="resetForm">CLEAR</button></div></form>
+<section class="inventory"><div style="display:flex;justify-content:space-between;align-items:end"><div><p class="eyebrow">INVENTORY</p><h2 style="font-size:38px;margin:0">Products</h2></div><span id="inventoryCount"></span></div><div id="productList"></div></section>
+<section class="orders"><div class="orders-head"><div><p class="eyebrow">ORDERS</p><h2 style="font-size:38px;margin:0">Customer orders</h2></div><button class="order-view" id="refreshOrders">REFRESH</button></div><p id="ordersMessage" class="message"></p><div id="ordersList"></div></section></div>
+<script src="admin.js"></script></body></html>
