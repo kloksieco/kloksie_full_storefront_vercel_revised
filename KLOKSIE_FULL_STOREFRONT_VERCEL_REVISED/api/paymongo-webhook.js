@@ -44,10 +44,8 @@ module.exports = async (req, res) => {
     if (type === "checkout_session.payment.paid") {
       const reference = String(session.reference_number || "").trim();
       if (reference) {
-        const existing = await supabaseRequest(`orders?select=id,status,items,paymongo_checkout_session_id&reference=eq.${encodeURIComponent(reference)}&limit=1`);
-        if (Array.isArray(existing) && existing[0] && existing[0].status !== "paid" && existing[0].status !== "processing" && existing[0].status !== "shipped" && existing[0].status !== "completed") {
-          await supabaseRequest(`orders?id=eq.${encodeURIComponent(existing[0].id)}`, { method:"PATCH", headers:{Prefer:"return=representation"}, body:JSON.stringify({status:"paid"}) });
-        }
+        await supabaseRequest("rpc/fulfill_paid_order", { method:"POST", body:JSON.stringify({order_reference:reference}) });
+      }
       }
     }
     if (type === "checkout_session.payment.failed") {
