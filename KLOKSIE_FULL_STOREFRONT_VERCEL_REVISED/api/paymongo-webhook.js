@@ -46,7 +46,6 @@ module.exports = async (req, res) => {
       if (reference) {
         await supabaseRequest("rpc/fulfill_paid_order", { method:"POST", body:JSON.stringify({order_reference:reference}) });
       }
-      }
     }
     if (type === "checkout_session.payment.failed") {
       const reference = String(session.reference_number || "").trim();
