@@ -4,8 +4,7 @@ module.exports = async (req, res) => {
   if (!verifyAdmin(req)) return json(res, 401, { error: "Please sign in again." });
   try {
     if (req.method === "GET") {
-      const orders = await supabaseRequest("orders?select=id,reference,status,customer_name,customer_email,customer_phone,shipping_address,total_php,items,paymongo_checkout_session_id,created_at&order=created_at.desc");
-      return json(res, 200, { orders: Array.isArray(orders) ? orders : [] });
+      let orders;try{orders=await supabaseRequest("orders?select=id,reference,status,customer_name,customer_email,customer_phone,shipping_address,total_php,items,paymongo_checkout_session_id,created_at&order=created_at.desc");}catch(primaryError){console.error("Rich order query failed, using base order fields:",primaryError);orders=await supabaseRequest("orders?select=id,reference,status,customer_name,customer_email,customer_phone,shipping_address,total_php,created_at&order=created_at.desc");orders=(Array.isArray(orders)?orders:[]).map(o=>({...o,items:[],paymongo_checkout_session_id:""}));}return json(res,200,{orders:Array.isArray(orders)?orders:[]});
     }
     if (req.method === "PATCH") {
       const body = parseBody(req);
