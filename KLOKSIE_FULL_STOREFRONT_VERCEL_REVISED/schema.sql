@@ -58,11 +58,13 @@ create table if not exists public.orders (
   total_php integer not null default 0 check (total_php >= 0),
   items jsonb not null default '[]'::jsonb,
   paymongo_checkout_session_id text not null default '',
+  inventory_committed boolean not null default false,
   created_at timestamptz not null default now()
 );
 
 alter table public.orders add column if not exists items jsonb not null default '[]'::jsonb;
 alter table public.orders add column if not exists paymongo_checkout_session_id text not null default '';
+alter table public.orders add column if not exists inventory_committed boolean not null default false;
 
 create index if not exists products_public_order_idx on public.products (active, sort_order, created_at desc);
 create index if not exists orders_reference_idx on public.orders (reference);
@@ -100,3 +102,50 @@ values
   ('kloksie-01', 'KLOKSIE LOW 01', 'Black / Off-white sneaker', 'assets/product-01.jpg', 'Black low-top sneaker', 0, 0, 'COMING SOON', '', 'Archive', true, 1),
   ('kloksie-02', 'RICK OWENS', 'Sculptural low-top sneaker', 'assets/product-02.jpg', 'Rick Owens sneaker', 3500, 1, 'NEW', '37', 'Archive', true, 2)
 on conflict (id) do nothing;
+
+
+-- Atomically marks a paid order and decrements the exact purchased variants/base stock.
+create or replace function public.fulfill_paid_order(order_reference text)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare
+  o public.orders%rowtype;
+  item jsonb;
+  variant_id uuid;
+  product_id text;
+  qty integer;
+  current_stock integer;
+begin
+  select * into o from public.orders where reference = order_reference for update;
+  if not found then return false; end if;
+  if o.inventory_committed then
+    update public.orders set status = 'paid' where id = o.id and status = 'pending';
+    return true;
+  end if;
+
+  for item in select * from jsonb_array_elements(o.items)
+  loop
+    qty := greatest(1, coalesce((item->>'quantity')::integer, 1));
+    variant_id := nullif(item->>'variant_id','')::uuid;
+    product_id := item->>'id';
+
+    if variant_id is not null then
+      select stock into current_stock from public.product_variants where id = variant_id for update;
+      if current_stock is null or current_stock < qty then
+        update public.orders set status = 'failed' where id = o.id;
+        return false;
+      end if;
+      update public.product_variants set stock = stock - qty where id = variant_id;
+    else
+      select stock into current_stock from public.products where id = product_id for update;
+      if current_stock is null or current_stock < qty then
+        update public.orders set status = 'failed' where id = o.id;
+        return false;
+      end if;
+      update public.products set stock = stock - qty where id = product_id;
+    end if;
+  end loop;
+
+  update public.orders set status = 'paid', inventory_committed = true where id = o.id;
+  return true;
+end;
+$$;
